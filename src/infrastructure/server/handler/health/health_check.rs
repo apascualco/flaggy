@@ -1,4 +1,4 @@
-use actix_web::{get, HttpResponse};
+use actix_web::{HttpResponse, Responder};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -6,8 +6,7 @@ struct CheckResponse {
     status: String,
 }
 
-#[get("/health")]
-async fn health() -> HttpResponse {
+pub async fn health() -> impl Responder {
     let response = CheckResponse {
         status: "UP".to_string(),
     };
