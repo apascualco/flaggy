@@ -5,4 +5,7 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.5.1"
+futures-util = "0.3.30"
+actix-service = "2.0.2"
 serde = { version = "1.0.202", features = ["derive"] }
+chrono = "0.4.38"
