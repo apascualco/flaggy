@@ -1,11 +1,12 @@
 use bcrypt::{hash_with_salt, verify, BcryptError};
+use rand::{Rng, thread_rng};
 
 pub struct Password<'a> {
     value: &'a str,
 }
 
 impl<'a> Password<'a> {
-    fn new(value: &'a str) -> Password {
+    pub fn new(value: &'a str) -> Password {
         Password { value }
     } 
 
@@ -13,10 +14,16 @@ impl<'a> Password<'a> {
         self.value
     }
 
-    fn hash(&self) -> Result<String, BcryptError> {
-        let salt: [u8; 16] = [0; 16];
+    fn salt() -> [u8; 16] {
+        let mut rng = thread_rng();
+        let mut salt = [0; 16];
+        rng.fill(&mut salt);
+        salt
+    }
+
+    pub fn hash(&self) -> Result<String, BcryptError> {
         let cost = 14;
-        let hash = hash_with_salt(self.value, cost, salt)?;
+        let hash = hash_with_salt(self.value, cost, Password::salt())?;
         return Ok(hash.to_string());
     }
 
