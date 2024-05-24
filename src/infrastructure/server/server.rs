@@ -1,15 +1,27 @@
+use std::sync::Arc;
+
 use actix_web::{web, App, HttpServer};
+
+use crate::application::user::create_user::{UserCreator, UserCreatorService};
 
 use super::{handler::{health::health_check::health, user::post_user::create_user}, middleware::logger::Logger};
 
 pub async  fn run() -> std::io::Result<()> {
-    HttpServer::new(|| {
+
+    let user_creator: Arc<dyn UserCreator> = Arc::new(UserCreatorService);
+
+    HttpServer::new(move || {
         App::new()
             .wrap(Logger)
             .route("/health", web::get().to(health))
-            .route("/user", web::post().to(create_user))
+            .service(
+                web::resource("/user")
+                    .app_data(web::Data::new(user_creator.clone()))
+                    .route(web::post().to(create_user))
+                )
     })
     .bind("127.0.0.1:8080")?
     .run()
     .await
 }
+
