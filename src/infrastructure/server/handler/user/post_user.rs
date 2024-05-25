@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::application::user::create_user::UserCreator;
+use crate::{application::user::create_user::{UserCreator, UserCreatorService}, domain::user_repository::UserRepository, };
 
 use actix_web::{web, HttpResponse, Responder};
 use serde::{Serialize, Deserialize};
@@ -16,8 +16,8 @@ pub struct UserResponse {
     email: String
 }
 
-pub async fn create_user(
-    user_case: web::Data<Arc<dyn UserCreator>>,
+pub async fn create_user<R: UserRepository>(
+    user_case: web::Data<Arc<UserCreatorService<R>>>,
     user: web::Json<UserRequest>
 ) -> impl Responder {
 
