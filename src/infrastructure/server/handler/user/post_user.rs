@@ -21,7 +21,10 @@ pub async fn create_user<R: UserRepository>(
     user: web::Json<UserRequest>
 ) -> impl Responder {
 
-    user_case.create_user(&user.email, &user.password);
-    //HttpResponse::Ok().json(user)
-    HttpResponse::Ok().body("OK")
+    let new_user = user_case.create_user(&user.email, &user.password);
+    let response = UserResponse {
+        id: new_user.get_id(),
+        email: new_user.get_email().to_string(),
+    };
+    HttpResponse::Ok().json(response)
 }

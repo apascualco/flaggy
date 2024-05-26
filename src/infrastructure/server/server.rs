@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use actix_web::{web, App, HttpServer};
+use diesel::{r2d2::ConnectionManager, MysqlConnection};
 
 use crate::{application::user::create_user::{UserCreator, UserCreatorService}, infrastructure::repository::user_repository::UserRepositoryImpl};
 
@@ -8,7 +9,9 @@ use super::{handler::{health::health_check::health, user::post_user::create_user
 
 pub async  fn run() -> std::io::Result<()> {
 
-    let user_creator = Arc::new(UserCreatorService::new(UserRepositoryImpl));
+    let db_connection_pool = establish_connection();
+    let user_repository = UserRepositoryImpl{ pool: db_connection_pool };
+    let user_creator = Arc::new(UserCreatorService::new(user_repository));
 
     HttpServer::new(move || {
         App::new()
@@ -23,5 +26,27 @@ pub async  fn run() -> std::io::Result<()> {
     .bind("127.0.0.1:8080")?
     .run()
     .await
+}
+
+fn establish_connection() -> r2d2::Pool<ConnectionManager<MysqlConnection>> {
+    let host = std::env::var("FLAGGY_DB_HOST")
+        .expect("FLAGGY_DB_HOST must be set.");
+
+    let user = std::env::var("FLAGGY_DB_USER")
+        .expect("FLAGGY_DB_USER must be set.");
+
+    let password = std::env::var("FLAGGY_DB_PASSWORD")
+        .expect("FLAGGY_DB_PASSWORD must be set.");
+
+    let db_name = std::env::var("FLAGGY_DB_NAME")
+        .expect("FLAGGY_DB_NAME must be set.");
+
+    let database_url = format!("mysql://{}:{}@{}:3306/{}?charset=utf8&parseTime=True", user, password, host, db_name);
+
+    let manager = ConnectionManager::<MysqlConnection>::new(database_url);
+
+    r2d2::Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool.")
 }
 

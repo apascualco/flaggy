@@ -10,6 +10,7 @@ pub trait UserCreator<R> where R: UserRepository + Send + Sync {
 pub struct UserCreatorService<R> where R: UserRepository + Send + Sync {
     repository: R,
 }
+
 impl<R> UserCreator<R> for UserCreatorService<R> where R: UserRepository + Send + Sync {
 
     fn new(repository: R) -> Self {
