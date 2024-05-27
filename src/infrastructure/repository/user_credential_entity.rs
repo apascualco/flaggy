@@ -1,14 +1,21 @@
-use diesel::{deserialize::Queryable, table};
+use chrono::NaiveDateTime;
+use diesel::{deserialize::Queryable, prelude::Insertable, table};
 
-#[derive(Queryable, Debug)]
+#[derive(Debug, Queryable, Insertable)]
+#[diesel(table_name = credential)]
 pub struct UserCredential {
-    pub id: i32,
+    pub user_id: String,
     pub password: String,
+    pub created_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
 }
 
 table! {
-    credentials (id) {
-        id -> Integer,
+    credential (user_id) {
+        user_id -> VarChar,
         password -> Text,
+        is_active -> Bool,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
     }
 }

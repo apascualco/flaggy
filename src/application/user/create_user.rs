@@ -22,7 +22,7 @@ impl<R> UserCreator<R> for UserCreatorService<R> where R: UserRepository + Send 
         match password.hash() {
             Ok(value) => {
                 let uuid = Uuid::new_v4();
-                return self.repository.save(uuid, email, value.as_str());
+                return self.repository.save(uuid, email, value.as_str()).expect("Error save user");
             } 
             Err(error) => println!("Error: {}", error),
         }
