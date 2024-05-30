@@ -27,7 +27,7 @@ impl<'a> Password<'a> {
         return Ok(hash.to_string());
     }
 
-    fn verify(password: &str, hash: &str) -> bool { 
+    pub fn verify(password: &str, hash: &str) -> bool { 
         match verify(password, hash) {
             Ok(true) => true,
             Ok(false) => false,

@@ -14,7 +14,6 @@ table! {
     credential (user_id) {
         user_id -> VarChar,
         password -> Text,
-        is_active -> Bool,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
     }
