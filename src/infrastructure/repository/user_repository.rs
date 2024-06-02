@@ -1,7 +1,40 @@
-use crate::{domain::{user::User, user_repository::UserRepository}, infrastructure::repository::{user_credential_entity::{credential::dsl::{credential, user_id}, UserCredential}, user_entity::{user::dsl::{email, user}, UserEntity}}};
+use crate::{
+    domain::{
+        user::User, 
+        user_repository::UserRepository
+    }, 
+    infrastructure::repository::{
+        user_credential_entity::{
+            credential::dsl::{
+                credential, 
+                user_id
+            }, 
+            UserCredential
+        }, 
+        user_entity::{
+            user::dsl::{
+                email, 
+                user
+            }, 
+            UserEntity
+        },
+        user_role::{
+            user_role::dsl::{user_role}
+        }
+    }
+};
 use chrono::Utc;
-use diesel::{r2d2::{self, ConnectionManager}, result::Error, Connection, MysqlConnection, QueryDsl, RunQueryDsl};
+use diesel::{
+    r2d2::{self, ConnectionManager}, 
+    result::Error, 
+    Connection, 
+    MysqlConnection, 
+    QueryDsl, 
+    RunQueryDsl
+};
 use diesel::prelude::*;
+
+use super::user_role::UserRoleEnttty;
 
 #[derive(Debug, Clone)]
 pub struct UserRepositoryImpl {
@@ -13,24 +46,32 @@ impl UserRepository for UserRepositoryImpl {
 
         conn.transaction::<_, Error, _>(|conn| {
 
-
+            let created_at = Utc::now().naive_utc();
             let user_entity = UserEntity { 
                 id: id.to_string(), 
                 email: user_email.to_string(), 
                 is_active: true ,
-                created_at: Utc::now().naive_utc(),
+                created_at: created_at,
                 updated_at: None
             };
             let credentials_entity = UserCredential {
                 user_id: id.to_string(),
                 password: password.to_string(),
-                created_at: Utc::now().naive_utc(),
+                created_at: created_at,
+                updated_at: None
+            };
+
+            let user_role_entity = UserRoleEnttty {
+                role: String::from("USER"),
+                user_id: id.to_string(),
+                is_active: true,
+                created_at: created_at,
                 updated_at: None
             };
 
             diesel::insert_into(user).values(&user_entity).execute(&mut *conn)?;
             diesel::insert_into(credential).values(&credentials_entity).execute(&mut *conn)?;
-
+            diesel::insert_into(user_role).values(&user_role_entity).execute(&mut *conn)?;
         
             Ok(User::with_id(id, user_email.to_string()))
         })
