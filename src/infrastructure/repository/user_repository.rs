@@ -19,7 +19,10 @@ use crate::{
             UserEntity
         },
         user_role::{
-            user_role::dsl::{user_role}
+            user_role::dsl::{
+                user_role,
+                user_id as roles_user_id
+            }
         }
     }
 };
@@ -88,4 +91,12 @@ impl UserRepository for UserRepositoryImpl {
         let cred = credential.filter(user_id.eq(id)).first::<UserCredential>(&mut conn)?;
         Ok(cred)
     }
+
+    fn find_roles_by_user_id(&self, id: String) -> Result<Vec<String>, Error> {
+        let mut conn = self.pool.get().expect("Failed to get a connection from the pool");
+        let user_roles = user_role.filter(roles_user_id.eq(id)).load::<UserRoleEnttty>(&mut conn)?;
+        let roles: Vec<String> = user_roles.into_iter().map(|r| r.role).collect();
+        Ok(roles)
+    }
+    
 }

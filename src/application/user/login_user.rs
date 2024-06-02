@@ -26,14 +26,15 @@ impl<R> Login<R> for LoginService<R> where R: UserRepository + Send + Sync {
             Ok(value) => value.get_id(),
             Err(err) => return Err(err.into()),
         };
-        let credential_found = self.repository.find_credentials_by_user_id(user_id);
+        let credential_found = self.repository.find_credentials_by_user_id(user_id.clone());
         let cred = match credential_found {
             Ok(value) => value,
             Err(err) => return Err(err.into()),
         };
+        let roles = self.repository.find_roles_by_user_id(user_id.clone());
         if Password::verify(password, cred.password.as_str()) {
             return match Uuid::parse_str(cred.user_id.as_str()) {
-                Ok(value) => Ok(Token::new(value, vec![])),
+                Ok(value) => Ok(Token::new(value, roles?)),
                 Err(err) => Err(err.into())
             }
         }

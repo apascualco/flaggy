@@ -7,5 +7,6 @@ pub trait UserRepository: Send + Sync {
     fn save(&self, id: Uuid, email: &str, password: &str) -> Result<User, Error>;
     fn find_by_email(&self, email: String) -> Result<User, Error>;
     fn find_credentials_by_user_id(&self, id: String) -> Result<UserCredential, Error>;
+    fn find_roles_by_user_id(&self, id: String) -> Result<Vec<String>, Error>;
 }
 
