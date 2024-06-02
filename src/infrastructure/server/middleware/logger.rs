@@ -4,6 +4,7 @@ use actix_web::Error;
 use futures_util::future::{ok, LocalBoxFuture, Ready};
 use std::rc::Rc;
 use std::task::{Context, Poll};
+use std::time::Instant;
 use chrono::Local;
 
 
@@ -47,16 +48,20 @@ where
     }
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        println!(
+        let request = format!(
             "[{}] Method: {}, Request: {}", 
             Local::now().format("%Y-%m-%d %H:%M:%S"), 
             req.method(), 
             req.path()
         );
+        let start = Instant::now();
         let fut = self.service.call(req);
         Box::pin(async move {
             let res = fut.await?;
+            let duration = start.elapsed();
+            println!("{} {:?} ms", request, duration.as_millis());
             Ok(res)
         })
+
     }
 }
