@@ -4,14 +4,17 @@ use actix_web::{web, App, HttpServer};
 use diesel::{r2d2::ConnectionManager, MysqlConnection};
 
 use crate::{
-    application::user::{
-        create_user::{UserCreator, UserCreatorService},
-        login_user::{Login, LoginService}
+    application::{
+        feature::create_feature::{FeatureCreator, FeatureCreatorService}, 
+        user::{
+            create_user::{UserCreator, UserCreatorService},
+            login_user::{Login, LoginService}
+        },
     }, 
     infrastructure::repository::user_repository::UserRepositoryImpl
 };
 
-use super::{handler::{health::health_check::health, user::{post_login::login_user, post_user::create_user}}, middleware::logger::Logger};
+use super::{handler::{feature::post_feature::create_feature, health::health_check::health, user::{post_login::login_user, post_user::create_user}}, middleware::{logger::Logger, security::Security}};
 
 pub async  fn run() -> std::io::Result<()> {
 
@@ -19,6 +22,7 @@ pub async  fn run() -> std::io::Result<()> {
     let user_repository = UserRepositoryImpl{ pool: db_connection_pool };
     let user_creator = Arc::new(UserCreatorService::new(user_repository.clone()));
     let login = Arc::new(LoginService::new(user_repository.clone()));
+    let feature_creator = Arc::new(FeatureCreatorService::new(user_repository.clone()));
 
     HttpServer::new(move || {
         App::new()
@@ -33,6 +37,12 @@ pub async  fn run() -> std::io::Result<()> {
                 web::resource("/login")
                     .app_data(web::Data::new(login.clone()))
                     .route(web::post().to(login_user::<UserRepositoryImpl>))
+                )
+            .service(
+                web::resource("/feature")
+                    .app_data(web::Data::new(feature_creator.clone()))
+                    .route(web::post().to(create_feature::<UserRepositoryImpl>))
+                    .wrap(Security{ min_role: "USER".to_string() })
                 )
     })
     .bind("127.0.0.1:8080")?

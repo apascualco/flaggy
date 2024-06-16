@@ -10,10 +10,6 @@ impl<'a> Password<'a> {
         Password { value }
     } 
 
-    fn get_value(&self) -> &'a str {
-        self.value
-    }
-
     fn salt() -> [u8; 16] {
         let mut rng = thread_rng();
         let mut salt = [0; 16];

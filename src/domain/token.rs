@@ -1,6 +1,6 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{error::Error, time::{Duration, SystemTime, UNIX_EPOCH}};
 
-use jsonwebtoken::{Algorithm, EncodingKey, Header};
+use jsonwebtoken::{decode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 
@@ -10,11 +10,35 @@ pub struct Token {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct TokenClaims {
+pub struct TokenClaims {
     user_id: String,
     roles: Vec<String>,
     exp: usize,
     iss: String,
+}
+
+impl TokenClaims {
+    pub fn new(token: String) -> Result<Self, Box<dyn Error>> {
+        let validation = Validation::new(Algorithm::HS256);
+        let key = DecodingKey::from_secret("any".as_ref());
+        let token_decode = decode::<TokenClaims>(&token, &key, &validation)?; 
+        Ok(TokenClaims { 
+            user_id: token_decode.claims.user_id, 
+            roles: token_decode.claims.roles, 
+            exp: token_decode.claims.exp, 
+            iss: token_decode.claims.iss 
+        })
+    }
+
+    #[allow(unused)]
+    pub fn get_user_id(&self) -> &String {
+        &self.user_id
+    }
+
+    pub fn get_roles(&self) -> &Vec<String> {
+        &self.roles
+    }
+
 }
 
 impl Token {
@@ -22,10 +46,13 @@ impl Token {
         Token {id, roles}
     }
 
+
+    #[allow(unused)]
     pub fn get_id(&self) -> String {
         self.id.to_string()
     }
 
+    #[allow(unused)]
     pub fn get_roles(&self) -> &Vec<String> {
         &self.roles
     }
